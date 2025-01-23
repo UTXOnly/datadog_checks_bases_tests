@@ -45,6 +45,14 @@ services:
                 "target_info": true,
                 "cache_shared_labels": false,
                 "max_returned_metrics": 200000
+              },
+              {
+                "openmetrics_endpoint": "http://%%host%%:8000/metrics",
+                "namespace": "om_target_info_w_shared_label_cache",
+                "metrics": [".*"],
+                "target_info": true,
+                "share_labels": {"memory_usage_bytes_49998": true},
+                "max_returned_metrics": 200000
               }
             ]
           }
