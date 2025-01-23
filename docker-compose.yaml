@@ -1,0 +1,54 @@
+
+
+services:
+  datadog-agent:
+    image: datadog/agent-dev:f43942fe-py3-jmx
+    container_name: datadog-agent
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      - DD_HOSTNAME=openmetrics-test
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc:/host/proc:ro
+      - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+
+  caddy:
+    image: caddy:2.7
+    container_name: caddy
+    ports:
+      - "8000:8000"
+    labels:
+      com.datadoghq.ad.checks: >-
+        {
+          "openmetrics": {
+            "instances": [
+              {
+                "openmetrics_endpoint": "http://%%host%%:8000/metrics",
+                "namespace": "om_target_info_disabled",
+                "metrics": [".*"],
+                "target_info": false,
+                "max_returned_metrics": 200000
+              },
+              {
+                "openmetrics_endpoint": "http://%%host%%:8000/metrics",
+                "namespace": "om_target_info_w_cache",
+                "metrics": [".*"],
+                "target_info": true,
+                "max_returned_metrics": 200000
+              },
+              {
+                "openmetrics_endpoint": "http://%%host%%:8000/metrics",
+                "namespace": "om_target_info_wo_cache",
+                "metrics": [".*"],
+                "target_info": true,
+                "cache_shared_labels": false,
+                "max_returned_metrics": 200000
+              }
+            ]
+          }
+        }
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./metrics.txt:/usr/share/caddy/metrics
